@@ -1,0 +1,211 @@
+@startuml Binomy_ClassDiagram
+
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam classBackgroundColor #F5F3FF
+skinparam classBorderColor #7C3AED
+skinparam classFontColor #1E293B
+skinparam arrowColor #7C3AED
+skinparam arrowThickness 1.5
+skinparam classAttributeFontColor #1E293B
+skinparam titleFontSize 18
+skinparam titleFontColor #7C3AED
+
+title Binomy — Diagramme de Classes UML\nMini-Projet PHP/JavaScript | TEK-UP University
+
+' ============================================================
+' ENTITÉ : User
+' ============================================================
+class User {
+  +id : INT <<PK>>
+  +name : VARCHAR(100)
+  +email : VARCHAR(150) <<UNIQUE>>
+  +password : VARCHAR(255)
+  +role : ENUM(student|locataire|admin)
+  +avatar : VARCHAR(255)
+  +phone : VARCHAR(20)
+  +city : VARCHAR(100)
+  +bio : TEXT
+  +is_active : TINYINT(1)
+  +created_at : DATETIME
+  --
+  +register() : bool
+  +login() : bool
+  +logout() : void
+  +updateProfile() : bool
+}
+
+' ============================================================
+' ENTITÉ : StudentProfile (extension de User)
+' ============================================================
+class StudentProfile {
+  +id : INT <<PK>>
+  +user_id : INT <<FK>>
+  +budget_min : INT
+  +budget_max : INT
+  +cleanliness : TINYINT (1-5)
+  +smoking : TINYINT(1)
+  +pets_ok : TINYINT(1)
+  +schedule : ENUM(early_bird|night_owl|flexible)
+  +personal_rules : TEXT
+  +looking_for : ENUM(roommate|housing|both)
+  +available_from : DATE
+  --
+  +getCompatibilityScore(other: StudentProfile) : float
+}
+
+' ============================================================
+' ENTITÉ : Listing
+' ============================================================
+class Listing {
+  +id : INT <<PK>>
+  +owner_id : INT <<FK>>
+  +title : VARCHAR(200)
+  +description : TEXT
+  +type : ENUM(chambre|studio|appartement|maison)
+  +price : DECIMAL(8,2)
+  +city : VARCHAR(100)
+  +address : VARCHAR(255)
+  +rooms : TINYINT
+  +surface : INT
+  +status : ENUM(available|rented)
+  +created_at : DATETIME
+  +updated_at : DATETIME
+  --
+  +create() : bool
+  +update() : bool
+  +delete() : bool
+  +markAsRented() : void
+}
+
+' ============================================================
+' ENTITÉ : ListingImage
+' ============================================================
+class ListingImage {
+  +id : INT <<PK>>
+  +listing_id : INT <<FK>>
+  +image_path : VARCHAR(255)
+  +is_main : TINYINT(1)
+  +uploaded_at : DATETIME
+}
+
+' ============================================================
+' ENTITÉ : RoommateRequest
+' ============================================================
+class RoommateRequest {
+  +id : INT <<PK>>
+  +sender_id : INT <<FK>>
+  +receiver_id : INT <<FK>>
+  +message : TEXT
+  +status : ENUM(pending|accepted|refused|cancelled)
+  +created_at : DATETIME
+  +responded_at : DATETIME
+  --
+  +send() : bool
+  +accept() : Match
+  +refuse() : bool
+  +cancel() : bool
+}
+
+' ============================================================
+' ENTITÉ : Match
+' ============================================================
+class Match {
+  +id : INT <<PK>>
+  +request_id : INT <<FK>> <<UNIQUE>>
+  +user1_id : INT <<FK>>
+  +user2_id : INT <<FK>>
+  +created_at : DATETIME
+  --
+  +getMessages() : Message[]
+}
+
+' ============================================================
+' ENTITÉ : Message
+' ============================================================
+class Message {
+  +id : INT <<PK>>
+  +sender_id : INT <<FK>>
+  +receiver_id : INT <<FK>>
+  +match_id : INT <<FK, nullable>>
+  +listing_id : INT <<FK, nullable>>
+  +content : TEXT
+  +is_read : TINYINT(1)
+  +sent_at : DATETIME
+  --
+  +send() : bool
+  +markAsRead() : void
+}
+
+' ============================================================
+' ENTITÉ : Notification
+' ============================================================
+class Notification {
+  +id : INT <<PK>>
+  +user_id : INT <<FK>>
+  +type : ENUM(new_request|request_accepted|request_refused|new_message|listing_update)
+  +reference_id : INT
+  +content : VARCHAR(255)
+  +is_read : TINYINT(1)
+  +created_at : DATETIME
+  --
+  +markAsRead() : void
+  +getUnreadCount() : int
+}
+
+' ============================================================
+' RELATIONS
+' ============================================================
+
+' User → StudentProfile (1..1 pour les étudiants)
+User "1" --> "0..1" StudentProfile : has\n<<role=student only>>
+
+' User → Listing (propriétaire)
+User "1" --> "0..*" Listing : owns\n<<role=locataire>>
+
+' Listing → ListingImage
+Listing "1" *--> "1..*" ListingImage : contains
+
+' User → RoommateRequest (comme expéditeur)
+User "1" --> "0..*" RoommateRequest : sends\n<<sender>>
+
+' User → RoommateRequest (comme destinataire)
+User "1" --> "0..*" RoommateRequest : receives\n<<receiver>>
+
+' RoommateRequest → Match (si acceptée)
+RoommateRequest "1" --> "0..1" Match : creates if accepted
+
+' Match → Message
+Match "1" *--> "0..*" Message : contains\n<<match chat>>
+
+' Listing → Message (contact propriétaire)
+Listing "1" --> "0..*" Message : triggers\n<<listing contact>>
+
+' User → Message (envoyeur)
+User "1" --> "0..*" Message : sends
+
+' User → Notification
+User "1" *--> "0..*" Notification : receives
+
+note bottom of RoommateRequest
+  Contraintes :
+  - sender_id ≠ receiver_id
+  - UNIQUE(sender_id, receiver_id)
+  - Un seul statut actif à la fois
+end note
+
+note bottom of Message
+  Règle logique :
+  - match_id renseigné = chat étudiant/étudiant
+  - listing_id renseigné = contact propriétaire
+  - Jamais les deux simultanément
+end note
+
+note right of User
+  Rôles :
+  - student → accès StudentProfile + matching
+  - locataire → accès Listing management
+  - admin → accès complet à toutes les entités
+end note
+
+@enduml
