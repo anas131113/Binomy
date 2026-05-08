@@ -1,10 +1,20 @@
 <?php
-session_start();
-if (empty($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
-    header('Location: /');
-    exit;
-}
-$userName = htmlspecialchars($_SESSION['name'], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+// Prototype suivi — données statiques
+$students = [
+    ['name'=>'Ahmed Trabelsi',   'city'=>'Tunis',   'budget'=>'300–500', 'schedule'=>'Lève-tôt',   'smoking'=>false, 'pets'=>false, 'clean'=>4, 'bio'=>'Étudiant en informatique à l\'ENIT. Calme, sérieux, cherche colocataire sympa.'],
+    ['name'=>'Mariam Chaouachi', 'city'=>'Sfax',    'budget'=>'200–400', 'schedule'=>'Flexible',    'smoking'=>false, 'pets'=>true,  'clean'=>3, 'bio'=>'En master gestion à Sfax. Sociable, aime la cuisine.'],
+    ['name'=>'Youssef Mejri',    'city'=>'Sousse',  'budget'=>'250–450', 'schedule'=>'Couche-tard', 'smoking'=>true,  'pets'=>false, 'clean'=>2, 'bio'=>'Ingénieur génie civil. Cherche quelqu\'un de tolérant.'],
+    ['name'=>'Sarra Hamdi',      'city'=>'Tunis',   'budget'=>'350–600', 'schedule'=>'Lève-tôt',   'smoking'=>false, 'pets'=>false, 'clean'=>5, 'bio'=>'Étudiante en médecine. Très organisée, cherche colocataire sérieuse.'],
+    ['name'=>'Amine Bouazizi',   'city'=>'Monastir','budget'=>'200–350', 'schedule'=>'Flexible',    'smoking'=>false, 'pets'=>true,  'clean'=>3, 'bio'=>'Licence économie. Sportif, sort souvent le week-end.'],
+    ['name'=>'Rania Kasmi',      'city'=>'Bizerte', 'budget'=>'300–500', 'schedule'=>'Couche-tard', 'smoking'=>false, 'pets'=>false, 'clean'=>4, 'bio'=>'Master droit. Studieuse, cherche ambiance calme.'],
+];
+
+$listings = [
+    ['title'=>'Studio meublé près ENIT',           'type'=>'Studio',      'city'=>'Tunis',   'price'=>'450', 'rooms'=>1, 'surface'=>28, 'owner'=>'Kamel Gharbi'],
+    ['title'=>'Chambre dans appart 3 pièces',       'type'=>'Chambre',     'city'=>'Sfax',    'price'=>'250', 'rooms'=>1, 'surface'=>15, 'owner'=>'Hassen Jelassi'],
+    ['title'=>'Appartement F2 proche fac',          'type'=>'Appartement', 'city'=>'Sousse',  'price'=>'600', 'rooms'=>2, 'surface'=>55, 'owner'=>'Sonia Maaloul'],
+    ['title'=>'Studio tout équipé centre-ville',    'type'=>'Studio',      'city'=>'Monastir','price'=>'380', 'rooms'=>1, 'surface'=>32, 'owner'=>'Nizar Fakhfakh'],
+];
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -16,364 +26,277 @@ $userName = htmlspecialchars($_SESSION['name'], ENT_QUOTES | ENT_HTML5, 'UTF-8')
 </head>
 <body>
 
-<!-- NAVBAR -->
 <nav class="navbar">
     <a href="/" class="navbar-brand">Bin<span>omy</span></a>
     <div class="navbar-links" style="align-items:center">
-        <span style="color:var(--text-muted);font-size:.9rem">Bonjour, <strong><?= $userName ?></strong></span>
-
-        <!-- Notification Bell -->
-        <div style="position:relative">
-            <button class="notif-btn" onclick="toggleNotifPanel()" title="Notifications">🔔
-                <span class="notif-badge" id="notif-badge" hidden>0</span>
-            </button>
-            <div id="notif-panel" style="display:none;position:absolute;right:0;top:48px;width:320px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-lg);z-index:200;overflow:hidden">
-                <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600;font-size:.9rem">Notifications</div>
-                <div id="notif-list" style="max-height:320px;overflow-y:auto"></div>
-            </div>
-        </div>
-
-        <button class="btn btn-outline btn-sm" onclick="handleLogout()">Déconnexion</button>
+        <span style="color:var(--text-muted);font-size:.9rem">Bonjour, <strong>Ahmed Trabelsi</strong></span>
+        <span class="badge badge-primary">Étudiant</span>
+        <button class="notif-btn" onclick="toggleNotif()">🔔
+            <span class="notif-badge">3</span>
+        </button>
+        <a href="/" class="btn btn-outline btn-sm">Déconnexion</a>
     </div>
 </nav>
 
 <div class="dashboard-layout">
-    <!-- SIDEBAR -->
     <aside class="sidebar">
         <div class="sidebar-section-title">Navigation</div>
         <ul class="sidebar-menu">
-            <li><a href="#" class="active" onclick="showSection('home')"><span class="sidebar-icon">🏠</span> Accueil</a></li>
-            <li><a href="#" onclick="showSection('students')"><span class="sidebar-icon">👥</span> Étudiants</a></li>
-            <li><a href="#" onclick="showSection('requests')"><span class="sidebar-icon">📬</span> Demandes reçues</a></li>
-            <li><a href="#" onclick="showSection('chat')"><span class="sidebar-icon">💬</span> Mes chats</a></li>
+            <li><a href="#" class="active" onclick="show('home')">       <span class="sidebar-icon">🏠</span> Accueil</a></li>
+            <li><a href="#" onclick="show('students')">                  <span class="sidebar-icon">👥</span> Étudiants</a></li>
+            <li><a href="#" onclick="show('requests')">                  <span class="sidebar-icon">📬</span> Demandes reçues</a></li>
+            <li><a href="#" onclick="show('chat')">                      <span class="sidebar-icon">💬</span> Mes chats</a></li>
         </ul>
         <div class="sidebar-section-title" style="margin-top:16px">Logements</div>
         <ul class="sidebar-menu">
-            <li><a href="#" onclick="showSection('listings')"><span class="sidebar-icon">🏡</span> Annonces</a></li>
+            <li><a href="#" onclick="show('listings')">                  <span class="sidebar-icon">🏡</span> Annonces</a></li>
         </ul>
         <div class="sidebar-section-title" style="margin-top:16px">Compte</div>
         <ul class="sidebar-menu">
-            <li><a href="#" onclick="showSection('profile')"><span class="sidebar-icon">👤</span> Mon profil</a></li>
+            <li><a href="#" onclick="show('profile')">                   <span class="sidebar-icon">👤</span> Mon profil</a></li>
         </ul>
     </aside>
 
-    <!-- MAIN -->
     <main class="main-content">
 
-        <!-- SECTION : ACCUEIL -->
-        <section id="section-home">
-            <div class="page-title">Bonjour, <?= $userName ?> 👋</div>
-            <p class="page-subtitle">Bienvenue sur Binomy. Voici votre résumé.</p>
-
+        <!-- ACCUEIL -->
+        <div id="s-home">
+            <div class="page-title">Bonjour, Ahmed 👋</div>
+            <p class="page-subtitle">Voici votre résumé d'activité sur Binomy.</p>
             <div class="stats-cards">
-                <div class="stat-card">
-                    <div class="stat-card-icon icon-purple">💌</div>
-                    <div class="stat-card-info">
-                        <div class="stat-num" id="stat-pending">—</div>
-                        <div class="stat-lbl">Demandes envoyées</div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-icon icon-green">🤝</div>
-                    <div class="stat-card-info">
-                        <div class="stat-num" id="stat-matches">—</div>
-                        <div class="stat-lbl">Matches actifs</div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-icon icon-blue">💬</div>
-                    <div class="stat-card-info">
-                        <div class="stat-num" id="stat-messages">—</div>
-                        <div class="stat-lbl">Messages non lus</div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-icon icon-orange">🏡</div>
-                    <div class="stat-card-info">
-                        <div class="stat-num">—</div>
-                        <div class="stat-lbl">Annonces disponibles</div>
-                    </div>
-                </div>
+                <div class="stat-card"><div class="stat-card-icon icon-purple">💌</div><div class="stat-card-info"><div class="stat-num">2</div><div class="stat-lbl">Demandes envoyées</div></div></div>
+                <div class="stat-card"><div class="stat-card-icon icon-green">🤝</div><div class="stat-card-info"><div class="stat-num">1</div><div class="stat-lbl">Match actif</div></div></div>
+                <div class="stat-card"><div class="stat-card-icon icon-blue">💬</div><div class="stat-card-info"><div class="stat-num">3</div><div class="stat-lbl">Messages non lus</div></div></div>
+                <div class="stat-card"><div class="stat-card-icon icon-orange">🏡</div><div class="stat-card-info"><div class="stat-num">12</div><div class="stat-lbl">Annonces disponibles</div></div></div>
             </div>
-
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
                 <div class="card">
                     <div class="card-header"><h3>Actions rapides</h3></div>
                     <div style="display:flex;flex-direction:column;gap:10px">
-                        <button class="btn btn-primary" onclick="showSection('students')">👥 Trouver un colocataire</button>
-                        <button class="btn btn-outline" onclick="showSection('listings')">🏡 Voir les logements</button>
-                        <button class="btn btn-outline" onclick="showSection('requests')">📬 Voir mes demandes</button>
+                        <button class="btn btn-primary" onclick="show('students')">👥 Trouver un colocataire</button>
+                        <button class="btn btn-outline" onclick="show('listings')">🏡 Voir les logements</button>
+                        <button class="btn btn-outline" onclick="show('requests')">📬 Voir mes demandes</button>
                     </div>
                 </div>
                 <div class="card">
-                    <div class="card-header"><h3>Conseil du jour</h3></div>
-                    <p style="color:var(--text-muted);font-size:.9rem;line-height:1.7">
-                        💡 Complétez votre profil pour augmenter vos chances de trouver un colocataire compatible.
-                        Un profil avec une bio et vos préférences obtient <strong>3× plus de demandes</strong>.
-                    </p>
-                    <button class="btn btn-outline btn-sm" style="margin-top:12px" onclick="showSection('profile')">
-                        Compléter mon profil →
-                    </button>
+                    <div class="card-header"><h3>Dernières notifications</h3></div>
+                    <div style="display:flex;flex-direction:column;gap:10px">
+                        <div style="padding:10px;background:var(--primary-l);border-radius:8px;font-size:.875rem">
+                            🤝 <strong>Mariam Chaouachi</strong> a accepté votre demande !
+                            <div style="color:var(--text-muted);font-size:.75rem;margin-top:4px">Il y a 2 heures</div>
+                        </div>
+                        <div style="padding:10px;background:var(--bg);border-radius:8px;font-size:.875rem">
+                            💬 Nouveau message de <strong>Youssef Mejri</strong>
+                            <div style="color:var(--text-muted);font-size:.75rem;margin-top:4px">Il y a 5 heures</div>
+                        </div>
+                        <div style="padding:10px;background:var(--bg);border-radius:8px;font-size:.875rem">
+                            💌 <strong>Sarra Hamdi</strong> vous a envoyé une demande
+                            <div style="color:var(--text-muted);font-size:.75rem;margin-top:4px">Hier</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </section>
+        </div>
 
-        <!-- SECTION : ÉTUDIANTS -->
-        <section id="section-students" hidden>
+        <!-- ÉTUDIANTS -->
+        <div id="s-students" hidden>
             <div class="page-title">Trouver un colocataire</div>
             <p class="page-subtitle">Parcourez les profils d'étudiants disponibles</p>
-
             <div class="card" style="margin-bottom:24px">
                 <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
                     <div class="form-group" style="margin:0;flex:1;min-width:200px">
                         <label class="form-label">Filtrer par ville</label>
-                        <input id="filter-city" type="text" class="form-control" placeholder="Ex: Tunis, Sfax...">
+                        <input type="text" class="form-control" placeholder="Ex: Tunis, Sfax..." id="filter-city">
                     </div>
-                    <button class="btn btn-primary" onclick="loadStudents()">🔍 Rechercher</button>
+                    <button class="btn btn-primary">🔍 Rechercher</button>
                 </div>
             </div>
-
-            <div class="students-grid" id="students-grid">
-                <div class="spinner"></div>
+            <div class="students-grid">
+                <?php foreach ($students as $s): ?>
+                <div class="student-card">
+                    <div class="student-card-header">
+                        <div class="student-avatar"><?= strtoupper(substr($s['name'], 0, 1) . substr(strstr($s['name'], ' '), 1, 1)) ?></div>
+                        <div>
+                            <div class="student-name"><?= htmlspecialchars($s['name']) ?></div>
+                            <div class="student-city">📍 <?= $s['city'] ?></div>
+                        </div>
+                    </div>
+                    <p class="student-bio"><?= htmlspecialchars($s['bio']) ?></p>
+                    <div class="student-tags">
+                        <?= $s['smoking'] ? '<span class="badge badge-warning">🚬 Fumeur</span>' : '<span class="badge badge-success">🚭 Non-fumeur</span>' ?>
+                        <?= $s['pets']    ? '<span class="badge badge-info">🐾 Animaux OK</span>' : '' ?>
+                        <span class="badge badge-primary"><?= $s['schedule'] ?></span>
+                        <span class="badge badge-primary">🧹 Propreté <?= $s['clean'] ?>/5</span>
+                    </div>
+                    <div class="student-budget">💰 <?= $s['budget'] ?> TND/mois</div>
+                    <button class="btn btn-primary btn-sm" style="width:100%;margin-top:14px" onclick="showToast('Demande envoyée à <?= $s['name'] ?> !')">
+                        💌 Envoyer une demande
+                    </button>
+                </div>
+                <?php endforeach; ?>
             </div>
-        </section>
+        </div>
 
-        <!-- SECTION : DEMANDES REÇUES -->
-        <section id="section-requests" hidden>
+        <!-- DEMANDES REÇUES -->
+        <div id="s-requests" hidden>
             <div class="page-title">Demandes reçues</div>
             <p class="page-subtitle">Acceptez ou refusez les demandes de colocation</p>
-            <div id="requests-container"><div class="spinner"></div></div>
-        </section>
+            <div class="card" style="margin-bottom:16px">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+                    <div class="student-avatar" style="width:44px;height:44px;font-size:1rem">SH</div>
+                    <div>
+                        <strong>Sarra Hamdi</strong>
+                        <div class="text-muted" style="font-size:.85rem">📍 Tunis · Médecine · Propreté 5/5</div>
+                    </div>
+                    <span class="badge badge-warning" style="margin-left:auto">En attente</span>
+                </div>
+                <p style="color:var(--text-muted);margin-bottom:12px;font-size:.9rem">"Bonjour ! Je suis étudiante en médecine, très sérieuse et organisée. Je cherche une colocataire calme pour partager un appartement à Tunis."</p>
+                <div style="display:flex;gap:8px">
+                    <button class="btn btn-success btn-sm" onclick="showToast('Demande acceptée ! Chat ouvert avec Sarra.')">✅ Accepter</button>
+                    <button class="btn btn-danger  btn-sm" onclick="showToast('Demande refusée.')">❌ Refuser</button>
+                </div>
+            </div>
+            <div class="card">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+                    <div class="student-avatar" style="width:44px;height:44px;font-size:1rem">RK</div>
+                    <div>
+                        <strong>Rania Kasmi</strong>
+                        <div class="text-muted" style="font-size:.85rem">📍 Bizerte · Droit · Propreté 4/5</div>
+                    </div>
+                    <span class="badge badge-warning" style="margin-left:auto">En attente</span>
+                </div>
+                <p style="color:var(--text-muted);margin-bottom:12px;font-size:.9rem">"Étudiante en master droit. Studieuse et discrète. Budget 300–500 TND/mois."</p>
+                <div style="display:flex;gap:8px">
+                    <button class="btn btn-success btn-sm" onclick="showToast('Demande acceptée ! Chat ouvert avec Rania.')">✅ Accepter</button>
+                    <button class="btn btn-danger  btn-sm" onclick="showToast('Demande refusée.')">❌ Refuser</button>
+                </div>
+            </div>
+        </div>
 
-        <!-- SECTION : CHAT -->
-        <section id="section-chat" hidden>
+        <!-- CHAT -->
+        <div id="s-chat" hidden>
             <div class="page-title">Mes conversations</div>
             <p class="page-subtitle">Chattez avec vos matches</p>
-
             <div class="chat-layout">
-                <div class="chat-list" id="chat-list">
-                    <div class="spinner"></div>
+                <div class="chat-list">
+                    <div class="chat-list-item active">
+                        <div class="student-avatar" style="width:40px;height:40px;font-size:.9rem;flex-shrink:0">MC</div>
+                        <div><div style="font-weight:600;font-size:.9rem">Mariam Chaouachi</div><div style="font-size:.75rem;color:var(--text-muted)">✅ Match actif</div></div>
+                    </div>
+                    <div class="chat-list-item">
+                        <div class="student-avatar" style="width:40px;height:40px;font-size:.9rem;flex-shrink:0">YM</div>
+                        <div><div style="font-weight:600;font-size:.9rem">Youssef Mejri</div><div style="font-size:.75rem;color:var(--text-muted)">3 messages non lus</div></div>
+                    </div>
                 </div>
                 <div class="chat-area">
-                    <div style="padding:16px;border-bottom:1px solid var(--border);font-weight:600" id="chat-partner-name">
-                        Sélectionnez une conversation
+                    <div style="padding:16px;border-bottom:1px solid var(--border);font-weight:600">Mariam Chaouachi ✅</div>
+                    <div class="chat-messages">
+                        <div><div class="chat-bubble recv">Bonjour Ahmed ! Contente qu'on soit match 😊</div><div style="font-size:.7rem;color:var(--text-muted);margin-top:2px">10:24</div></div>
+                        <div><div class="chat-bubble sent">Bonjour Mariam ! Moi aussi. Tu cherches pour quand ?</div><div style="font-size:.7rem;color:var(--text-muted);text-align:right;margin-top:2px">10:26</div></div>
+                        <div><div class="chat-bubble recv">Pour septembre, début d'année. Tu es à Tunis ?</div><div style="font-size:.7rem;color:var(--text-muted);margin-top:2px">10:28</div></div>
+                        <div><div class="chat-bubble sent">Oui, je cherche dans le quartier El Menzah ou Ariana.</div><div style="font-size:.7rem;color:var(--text-muted);text-align:right;margin-top:2px">10:30</div></div>
+                        <div><div class="chat-bubble recv">Parfait ! J'ai vu des annonces intéressantes sur Binomy 🏠</div><div style="font-size:.7rem;color:var(--text-muted);margin-top:2px">10:35</div></div>
                     </div>
-                    <div class="chat-messages" id="chat-messages">
-                        <div class="empty-state">
-                            <div class="empty-state-icon">💬</div>
-                            <h3>Aucune conversation sélectionnée</h3>
-                        </div>
+                    <div class="chat-input-area">
+                        <input type="text" class="form-control" placeholder="Écrire un message..." id="chat-in">
+                        <button class="btn btn-primary" onclick="sendMsg()">Envoyer</button>
                     </div>
-                    <form class="chat-input-area" id="chat-form">
-                        <input id="chat-input" type="text" class="form-control" placeholder="Écrire un message...">
-                        <button type="submit" class="btn btn-primary">Envoyer</button>
-                    </form>
                 </div>
             </div>
-        </section>
+        </div>
 
-        <!-- SECTION : LOGEMENTS -->
-        <section id="section-listings" hidden>
+        <!-- LOGEMENTS -->
+        <div id="s-listings" hidden>
             <div class="page-title">Annonces de logements</div>
             <p class="page-subtitle">Trouvez un logement adapté à votre budget</p>
-
             <div class="card" style="margin-bottom:24px">
-                <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
-                    <div class="form-group" style="margin:0;flex:1;min-width:150px">
-                        <label class="form-label">Ville</label>
-                        <input id="filter-city" type="text" class="form-control" placeholder="Tunis...">
-                    </div>
-                    <div class="form-group" style="margin:0;flex:1;min-width:150px">
-                        <label class="form-label">Type</label>
-                        <select id="filter-type" class="form-control">
-                            <option value="">Tous</option>
-                            <option value="chambre">Chambre</option>
-                            <option value="studio">Studio</option>
-                            <option value="appartement">Appartement</option>
-                            <option value="maison">Maison</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="margin:0;flex:1;min-width:150px">
-                        <label class="form-label">Prix max (TND)</label>
-                        <input id="filter-price" type="number" class="form-control" placeholder="500">
-                    </div>
-                    <button class="btn btn-primary" onclick="loadListings()">🔍 Rechercher</button>
+                <div style="display:flex;gap:12px;flex-wrap:wrap">
+                    <input type="text" class="form-control" placeholder="Ville..." style="flex:1;min-width:140px">
+                    <select class="form-control" style="flex:1;min-width:140px">
+                        <option>Tous les types</option><option>Chambre</option><option>Studio</option><option>Appartement</option>
+                    </select>
+                    <input type="number" class="form-control" placeholder="Prix max (TND)" style="flex:1;min-width:140px">
+                    <button class="btn btn-primary">🔍 Rechercher</button>
                 </div>
             </div>
-
-            <div class="listings-grid" id="listings-grid"></div>
-            <div id="pagination"></div>
-
-            <!-- Modal détail annonce -->
-            <div class="modal-overlay" id="listing-modal">
-                <div class="modal" style="max-width:600px">
-                    <div class="modal-body"></div>
-                    <button onclick="document.getElementById('listing-modal').classList.remove('open')"
-                            style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:1.5rem;cursor:pointer">✕</button>
+            <div class="listings-grid">
+                <?php foreach ($listings as $l): ?>
+                <div class="listing-card">
+                    <div class="listing-img">🏠</div>
+                    <div class="listing-body">
+                        <div class="listing-price"><?= $l['price'] ?> TND <span>/ mois</span></div>
+                        <div class="listing-title"><?= htmlspecialchars($l['title']) ?></div>
+                        <div class="listing-meta">
+                            <span>📍 <?= $l['city'] ?></span>
+                            <span>🏷️ <?= $l['type'] ?></span>
+                            <span>🚪 <?= $l['rooms'] ?> pièce(s)</span>
+                            <span>📐 <?= $l['surface'] ?> m²</span>
+                        </div>
+                        <div style="margin-top:10px;font-size:.8rem;color:var(--text-muted)">Par <?= $l['owner'] ?></div>
+                        <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px" onclick="showToast('Message envoyé au propriétaire !')">💬 Contacter</button>
+                    </div>
                 </div>
+                <?php endforeach; ?>
             </div>
-        </section>
+        </div>
 
-        <!-- SECTION : PROFIL -->
-        <section id="section-profile" hidden>
+        <!-- PROFIL -->
+        <div id="s-profile" hidden>
             <div class="page-title">Mon profil</div>
             <p class="page-subtitle">Complétez votre profil pour augmenter vos chances</p>
-
-            <div id="profile-alert"></div>
             <div class="card">
-                <form id="profile-form" onsubmit="saveProfile(event)">
+                <form onsubmit="event.preventDefault();showToast('Profil enregistré !')">
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-                        <div class="form-group">
-                            <label class="form-label">Nom complet</label>
-                            <input id="p-name" type="text" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Téléphone</label>
-                            <input id="p-phone" type="text" class="form-control" placeholder="+216 XX XXX XXX">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Ville actuelle</label>
-                            <input id="p-city" type="text" class="form-control" placeholder="Tunis, Sfax...">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Disponible à partir de</label>
-                            <input id="p-available" type="date" class="form-control">
-                        </div>
+                        <div class="form-group"><label class="form-label">Nom complet</label><input type="text" class="form-control" value="Ahmed Trabelsi"></div>
+                        <div class="form-group"><label class="form-label">Téléphone</label><input type="text" class="form-control" value="+216 55 123 456"></div>
+                        <div class="form-group"><label class="form-label">Ville</label><input type="text" class="form-control" value="Tunis"></div>
+                        <div class="form-group"><label class="form-label">Disponible à partir de</label><input type="date" class="form-control" value="2024-09-01"></div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Biographie</label>
-                        <textarea id="p-bio" class="form-control" placeholder="Parlez de vous, de vos études, de vos centres d'intérêt..."></textarea>
-                    </div>
-
-                    <h3 style="margin:24px 0 16px;color:var(--primary)">Préférences de colocation</h3>
+                    <div class="form-group"><label class="form-label">Bio</label><textarea class="form-control">Étudiant en informatique à l'ENIT. Calme, sérieux, cherche colocataire sympa.</textarea></div>
+                    <h3 style="margin:20px 0 16px;color:var(--primary)">Préférences de colocation</h3>
                     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
-                        <div class="form-group">
-                            <label class="form-label">Budget min (TND)</label>
-                            <input id="p-bmin" type="number" class="form-control" placeholder="200">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Budget max (TND)</label>
-                            <input id="p-bmax" type="number" class="form-control" placeholder="600">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Propreté (1–5)</label>
-                            <input id="p-clean" type="number" min="1" max="5" class="form-control" placeholder="3">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Rythme de vie</label>
-                            <select id="p-schedule" class="form-control">
-                                <option value="">-- Choisir --</option>
-                                <option value="early_bird">🌅 Lève-tôt</option>
-                                <option value="night_owl">🦉 Couche-tard</option>
-                                <option value="flexible">🔄 Flexible</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Je cherche</label>
-                            <select id="p-looking" class="form-control">
-                                <option value="both">Les deux</option>
-                                <option value="roommate">Un colocataire</option>
-                                <option value="housing">Un logement</option>
-                            </select>
-                        </div>
+                        <div class="form-group"><label class="form-label">Budget min (TND)</label><input type="number" class="form-control" value="300"></div>
+                        <div class="form-group"><label class="form-label">Budget max (TND)</label><input type="number" class="form-control" value="500"></div>
+                        <div class="form-group"><label class="form-label">Propreté (1–5)</label><input type="number" min="1" max="5" class="form-control" value="4"></div>
+                        <div class="form-group"><label class="form-label">Rythme de vie</label><select class="form-control"><option selected>🌅 Lève-tôt</option><option>🦉 Couche-tard</option><option>🔄 Flexible</option></select></div>
+                        <div class="form-group"><label class="form-label">Je cherche</label><select class="form-control"><option selected>Les deux</option><option>Un colocataire</option><option>Un logement</option></select></div>
                     </div>
-
                     <div style="display:flex;gap:24px;margin-bottom:20px">
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-                            <input id="p-smoking" type="checkbox"> Fumeur
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-                            <input id="p-pets" type="checkbox"> Accepte les animaux
-                        </label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"> Fumeur</label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"> Accepte les animaux</label>
                     </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Règles personnelles (allergies, habitudes…)</label>
-                        <textarea id="p-rules" class="form-control" placeholder="Ex: Allergie aux chats, végétarien, prières 5 fois/jour..."></textarea>
-                    </div>
-
                     <button type="submit" class="btn btn-primary btn-lg">💾 Enregistrer</button>
                 </form>
             </div>
-        </section>
+        </div>
 
     </main>
 </div>
 
-<!-- Hidden field for current user ID (used by chat.js) -->
-<input type="hidden" id="current-user-id" value="<?= (int) $_SESSION['user_id'] ?>">
+<!-- Toast notification -->
+<div id="toast" style="display:none;position:fixed;bottom:24px;right:24px;z-index:9999;min-width:260px"></div>
 
-<script src="/assets/js/auth.js"></script>
-<script src="/assets/js/notifications.js"></script>
-<script src="/assets/js/matches.js"></script>
-<script src="/assets/js/listings.js"></script>
-<script src="/assets/js/chat.js"></script>
 <script>
-// ---- Section switcher ----
-function showSection(name) {
-    document.querySelectorAll('[id^="section-"]').forEach(el => el.hidden = true);
-    document.querySelector(`#section-${name}`).hidden = false;
+function show(name) {
+    document.querySelectorAll('[id^="s-"]').forEach(el => el.hidden = true);
+    document.getElementById('s-' + name).hidden = false;
     document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
-
-    if (name === 'students') loadStudents();
-    if (name === 'requests') loadRequests();
-    if (name === 'chat')     loadMatches();
-    if (name === 'listings') loadListings();
-    if (name === 'profile')  loadProfile();
 }
-
-// ---- Profile load/save ----
-async function loadProfile() {
-    try {
-        const res  = await fetch('/api/users/get_profile.php');
-        const data = await res.json();
-        if (!data.success) return;
-        const p = data.data;
-        document.getElementById('p-name').value     = p.name      || '';
-        document.getElementById('p-phone').value    = p.phone     || '';
-        document.getElementById('p-city').value     = p.city      || '';
-        document.getElementById('p-bio').value      = p.bio       || '';
-        document.getElementById('p-bmin').value     = p.budget_min || '';
-        document.getElementById('p-bmax').value     = p.budget_max || '';
-        document.getElementById('p-clean').value    = p.cleanliness || '';
-        document.getElementById('p-available').value= p.available_from || '';
-        document.getElementById('p-smoking').checked= p.smoking == 1;
-        document.getElementById('p-pets').checked   = p.pets_ok  == 1;
-        if (p.schedule) document.getElementById('p-schedule').value = p.schedule;
-        if (p.looking_for) document.getElementById('p-looking').value = p.looking_for;
-        document.getElementById('p-rules').value = p.personal_rules || '';
-    } catch (_) {}
+function showToast(msg, type='success') {
+    const t = document.getElementById('toast');
+    t.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+    t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 3000);
 }
-
-async function saveProfile(event) {
-    event.preventDefault();
-    const body = {
-        name: document.getElementById('p-name').value,
-        phone: document.getElementById('p-phone').value,
-        city: document.getElementById('p-city').value,
-        bio: document.getElementById('p-bio').value,
-        budget_min: document.getElementById('p-bmin').value || null,
-        budget_max: document.getElementById('p-bmax').value || null,
-        cleanliness: document.getElementById('p-clean').value || null,
-        available_from: document.getElementById('p-available').value || null,
-        smoking: document.getElementById('p-smoking').checked ? 1 : 0,
-        pets_ok: document.getElementById('p-pets').checked ? 1 : 0,
-        schedule: document.getElementById('p-schedule').value,
-        looking_for: document.getElementById('p-looking').value,
-        personal_rules: document.getElementById('p-rules').value,
-    };
-
-    try {
-        const res  = await fetch('/api/users/update_profile.php', {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify(body),
-        });
-        const data = await res.json();
-        const el   = document.getElementById('profile-alert');
-        el.innerHTML = `<div class="alert alert-${data.success ? 'success' : 'error'}">${data.message}</div>`;
-    } catch (_) {}
+function sendMsg() {
+    const inp = document.getElementById('chat-in');
+    if (!inp.value.trim()) return;
+    const area = document.querySelector('.chat-messages');
+    area.innerHTML += `<div><div class="chat-bubble sent">${inp.value}</div><div style="font-size:.7rem;color:var(--text-muted);text-align:right;margin-top:2px">maintenant</div></div>`;
+    inp.value = '';
+    area.scrollTop = area.scrollHeight;
 }
+function toggleNotif() { showToast('3 notifications non lues','info'); }
 </script>
 </body>
 </html>

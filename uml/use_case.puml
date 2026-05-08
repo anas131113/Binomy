@@ -1,0 +1,171 @@
+@startuml Binomy_UseCaseDiagram
+
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam actorBackgroundColor #EDE9FE
+skinparam actorBorderColor #7C3AED
+skinparam usecaseBackgroundColor #F5F3FF
+skinparam usecaseBorderColor #7C3AED
+skinparam usecaseFontColor #1E293B
+skinparam arrowColor #7C3AED
+skinparam packageBackgroundColor #FAFAFA
+skinparam packageBorderColor #CBD5E1
+skinparam titleFontSize 20
+skinparam titleFontColor #7C3AED
+
+title Binomy — Diagramme des Cas d'Utilisation\nMini-Projet PHP/JavaScript | TEK-UP University
+
+' ============================================================
+' ACTEURS
+' ============================================================
+actor "Étudiant\n(Student)" as Student
+actor "Propriétaire\n(Locataire)" as Owner
+actor "Administrateur\n(Admin)" as Admin
+actor "Utilisateur\nnon connecté" as Guest
+
+' ============================================================
+' HÉRITAGE DES ACTEURS
+' ============================================================
+Student  --|> :Utilisateur connecté:
+Owner    --|> :Utilisateur connecté:
+Admin    --|> :Utilisateur connecté:
+
+' ============================================================
+' SYSTÈME
+' ============================================================
+rectangle "Système BINOMY" {
+
+    ' ---------- AUTHENTIFICATION ----------
+    package "Authentification" {
+        usecase "S'inscrire" as UC_Register
+        usecase "Se connecter" as UC_Login
+        usecase "Se déconnecter" as UC_Logout
+        usecase "Voir son profil" as UC_ViewProfile
+        usecase "Modifier son profil" as UC_EditProfile
+    }
+
+    ' ---------- ÉTUDIANT : COLOCATION ----------
+    package "Colocation (Student)" {
+        usecase "Compléter profil étudiant\n(budget, préférences...)" as UC_CompleteProfile
+        usecase "Parcourir les étudiants\ndisponibles" as UC_BrowseStudents
+        usecase "Voir le profil\nd'un étudiant" as UC_ViewStudent
+        usecase "Calculer le score\nde compatibilité" as UC_CompatScore
+        usecase "Envoyer une demande\nde colocation" as UC_SendRequest
+        usecase "Recevoir une demande\nde colocation" as UC_ReceiveRequest
+        usecase "Accepter une demande" as UC_AcceptRequest
+        usecase "Refuser une demande" as UC_RefuseRequest
+    }
+
+    ' ---------- ÉTUDIANT : LOGEMENTS ----------
+    package "Logements (Student)" {
+        usecase "Parcourir les annonces\nde logements" as UC_BrowseListings
+        usecase "Filtrer les annonces\n(ville, prix, type)" as UC_FilterListings
+        usecase "Voir le détail\nd'une annonce" as UC_ViewListing
+        usecase "Contacter\nle propriétaire" as UC_ContactOwner
+    }
+
+    ' ---------- MESSAGERIE ----------
+    package "Messagerie" {
+        usecase "Envoyer un message" as UC_SendMsg
+        usecase "Lire les messages\nd'une conversation" as UC_ReadMsg
+        usecase "Voir la liste\ndes conversations" as UC_ListConversations
+    }
+
+    ' ---------- NOTIFICATIONS ----------
+    package "Notifications" {
+        usecase "Recevoir des notifications" as UC_GetNotif
+        usecase "Marquer les notifications\ncomme lues" as UC_ReadNotif
+    }
+
+    ' ---------- PROPRIÉTAIRE ----------
+    package "Gestion Annonces (Locataire)" {
+        usecase "Publier une annonce\n(+ upload photos)" as UC_CreateListing
+        usecase "Modifier une annonce" as UC_EditListing
+        usecase "Supprimer une annonce" as UC_DeleteListing
+        usecase "Marquer un logement\ncomme loué" as UC_MarkRented
+        usecase "Voir mes annonces" as UC_MyListings
+    }
+
+    ' ---------- ADMIN ----------
+    package "Administration" {
+        usecase "Voir le dashboard\nstatistiques" as UC_Dashboard
+        usecase "Lister les utilisateurs" as UC_ListUsers
+        usecase "Rechercher / filtrer\nles utilisateurs" as UC_SearchUsers
+        usecase "Suspendre un compte" as UC_SuspendUser
+        usecase "Réactiver un compte" as UC_ReactivateUser
+        usecase "Lister toutes\nles annonces" as UC_AdminListings
+        usecase "Supprimer une annonce\n(modération)" as UC_AdminDeleteListing
+    }
+
+}
+
+' ============================================================
+' RELATIONS — GUEST
+' ============================================================
+Guest --> UC_Register
+Guest --> UC_Login
+Guest --> UC_BrowseListings
+
+' ============================================================
+' RELATIONS — AUTHENTIFICATION (tous)
+' ============================================================
+:Utilisateur connecté: --> UC_Logout
+:Utilisateur connecté: --> UC_ViewProfile
+:Utilisateur connecté: --> UC_EditProfile
+:Utilisateur connecté: --> UC_GetNotif
+:Utilisateur connecté: --> UC_ReadNotif
+
+' ============================================================
+' RELATIONS — ÉTUDIANT
+' ============================================================
+Student --> UC_CompleteProfile
+Student --> UC_BrowseStudents
+Student --> UC_SendRequest
+Student --> UC_ReceiveRequest
+Student --> UC_AcceptRequest
+Student --> UC_RefuseRequest
+Student --> UC_BrowseListings
+Student --> UC_FilterListings
+Student --> UC_ViewListing
+Student --> UC_ContactOwner
+Student --> UC_ListConversations
+Student --> UC_SendMsg
+Student --> UC_ReadMsg
+
+' ============================================================
+' RELATIONS — PROPRIÉTAIRE
+' ============================================================
+Owner --> UC_CreateListing
+Owner --> UC_EditListing
+Owner --> UC_DeleteListing
+Owner --> UC_MarkRented
+Owner --> UC_MyListings
+Owner --> UC_ListConversations
+Owner --> UC_SendMsg
+Owner --> UC_ReadMsg
+
+' ============================================================
+' RELATIONS — ADMIN
+' ============================================================
+Admin --> UC_Dashboard
+Admin --> UC_ListUsers
+Admin --> UC_SearchUsers
+Admin --> UC_SuspendUser
+Admin --> UC_ReactivateUser
+Admin --> UC_AdminListings
+Admin --> UC_AdminDeleteListing
+
+' ============================================================
+' RELATIONS INCLUDE / EXTEND
+' ============================================================
+UC_BrowseStudents    ..> UC_ViewStudent       : <<include>>
+UC_ViewStudent       ..> UC_CompatScore       : <<include>>
+UC_SendRequest       ..> UC_ViewStudent       : <<include>>
+UC_BrowseListings    ..> UC_FilterListings    : <<extend>>
+UC_ViewListing       ..> UC_ContactOwner      : <<extend>>
+UC_ContactOwner      ..> UC_SendMsg           : <<include>>
+UC_AcceptRequest     ..> UC_SendMsg           : <<include>>
+UC_SearchUsers       ..> UC_ListUsers         : <<include>>
+UC_SuspendUser       ..> UC_ListUsers         : <<include>>
+
+@enduml

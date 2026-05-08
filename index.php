@@ -1,12 +1,9 @@
 <?php
-session_start();
-
-// Rediriger vers le dashboard si déjà connecté
-if (!empty($_SESSION['user_id'])) {
-    $routes = ['student' => 'pages/dashboard_student.php', 'locataire' => 'pages/dashboard_locataire.php', 'admin' => 'pages/dashboard_admin.php'];
-    header('Location: ' . ($routes[$_SESSION['role']] ?? '/'));
-    exit;
-}
+// Prototype statique — suivi TEK-UP
+$role = $_GET['role'] ?? null;
+if ($role === 'student')   { header('Location: pages/dashboard_student.php');   exit; }
+if ($role === 'locataire') { header('Location: pages/dashboard_locataire.php'); exit; }
+if ($role === 'admin')     { header('Location: pages/dashboard_admin.php');     exit; }
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -15,21 +12,16 @@ if (!empty($_SESSION['user_id'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Binomy — Trouve ton colocataire idéal</title>
     <link rel="stylesheet" href="/assets/css/style.css">
-    <style>
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .hero-badge { display: inline-block; background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.3); border-radius: 999px; padding: 6px 16px; font-size: .85rem; margin-bottom: 20px; backdrop-filter: blur(8px); }
-    </style>
 </head>
 <body>
 
-<!-- NAVBAR -->
 <nav class="navbar">
     <div class="navbar-brand">Bin<span>omy</span></div>
     <div class="navbar-links">
         <a href="#features">Fonctionnalités</a>
-        <a href="#about">À propos</a>
-        <button class="btn btn-outline btn-sm" onclick="openModal('login')">Connexion</button>
-        <button class="btn btn-primary btn-sm" onclick="openModal('register')">S'inscrire</button>
+        <a href="#demo">Démo</a>
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('auth-modal').classList.add('open')">Connexion</button>
+        <button class="btn btn-primary btn-sm" onclick="document.getElementById('auth-modal').classList.add('open')">S'inscrire</button>
     </div>
 </nav>
 
@@ -37,41 +29,29 @@ if (!empty($_SESSION['user_id'])) {
 <section class="hero">
     <div class="container">
         <div class="hero-content">
-            <div class="hero-badge">🎓 Plateforme étudiante · Tunisie</div>
-            <h1>Trouve ton colocataire <br>& logement idéal</h1>
+            <div style="display:inline-block;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:6px 16px;font-size:.85rem;margin-bottom:20px;">
+                🎓 Plateforme étudiante · Tunisie
+            </div>
+            <h1>Trouve ton colocataire<br>& logement idéal</h1>
             <p>Binomy connecte les étudiants tunisiens avec des colocataires compatibles et des propriétaires de confiance. Fini les recherches interminables.</p>
             <div class="hero-cta">
-                <button class="btn-white" onclick="openModal('register')">
+                <button class="btn-white" onclick="document.getElementById('auth-modal').classList.add('open')">
                     🚀 Commencer gratuitement
                 </button>
-                <button class="btn-outline-white" onclick="openModal('login')">
-                    J'ai déjà un compte
-                </button>
+                <a href="#demo" class="btn-outline-white">Voir la démo →</a>
             </div>
         </div>
     </div>
 </section>
 
-<!-- STATS BAR -->
+<!-- STATS -->
 <div class="stats-bar">
     <div class="container">
         <div class="stats-grid">
-            <div>
-                <span class="stat-number">500+</span>
-                <span class="stat-label">Étudiants inscrits</span>
-            </div>
-            <div>
-                <span class="stat-number">200+</span>
-                <span class="stat-label">Logements disponibles</span>
-            </div>
-            <div>
-                <span class="stat-number">150+</span>
-                <span class="stat-label">Matches créés</span>
-            </div>
-            <div>
-                <span class="stat-number">8+</span>
-                <span class="stat-label">Villes couvertes</span>
-            </div>
+            <div><span class="stat-number">500+</span><span class="stat-label">Étudiants inscrits</span></div>
+            <div><span class="stat-number">200+</span><span class="stat-label">Logements disponibles</span></div>
+            <div><span class="stat-number">150+</span><span class="stat-label">Matches créés</span></div>
+            <div><span class="stat-number">8+</span><span class="stat-label">Villes couvertes</span></div>
         </div>
     </div>
 </div>
@@ -99,149 +79,122 @@ if (!empty($_SESSION['user_id'])) {
             </div>
             <div class="feature-card">
                 <div class="feature-icon">🔔</div>
-                <h3>Notifications temps réel</h3>
+                <h3>Notifications</h3>
                 <p>Soyez alerté immédiatement pour chaque demande de colocation, message ou réponse.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">🔒</div>
                 <h3>Sécurisé</h3>
-                <p>Vos données sont protégées. Mots de passe hachés, sessions sécurisées, requêtes préparées.</p>
+                <p>Mots de passe bcrypt, sessions PHP, requêtes PDO préparées — aucune faille SQL/XSS.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon">📱</div>
-                <h3>Responsive</h3>
-                <p>Interface adaptée à tous les appareils. Utilisez Binomy depuis votre mobile ou ordinateur.</p>
+                <div class="feature-icon">📊</div>
+                <h3>Dashboard Admin</h3>
+                <p>Interface d'administration complète avec statistiques, gestion des comptes et modération.</p>
             </div>
         </div>
     </div>
 </section>
 
-<!-- HOW IT WORKS -->
-<section style="padding:80px 0;background:var(--bg)" id="about">
-    <div class="container">
-        <h2 class="text-center">Comment ça marche ?</h2>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px;margin-top:48px">
-            <?php
-            $steps = [
-                ['1', '📝', 'Créez votre profil', 'Inscrivez-vous en tant qu\'étudiant ou propriétaire et complétez votre profil.'],
-                ['2', '🔍', 'Explorez', 'Parcourez les profils d\'étudiants ou les annonces de logements dans votre ville.'],
-                ['3', '💌', 'Connectez-vous', 'Envoyez une demande de colocation ou contactez un propriétaire.'],
-                ['4', '🏡', 'Trouvez votre match', 'Après acceptation, chattez et organisez votre emménagement !'],
-            ];
-            foreach ($steps as $s): ?>
-            <div style="text-align:center;padding:24px">
-                <div style="width:48px;height:48px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1rem;margin:0 auto 12px">
-                    <?= $s[0] ?>
-                </div>
-                <div style="font-size:32px;margin-bottom:12px"><?= $s[1] ?></div>
-                <h3 style="margin-bottom:8px"><?= $s[2] ?></h3>
-                <p style="color:var(--text-muted);font-size:.9rem"><?= $s[3] ?></p>
-            </div>
-            <?php endforeach; ?>
-        </div>
-        <div class="text-center mt-8">
-            <button class="btn btn-primary btn-lg" onclick="openModal('register')">
-                Rejoindre Binomy gratuitement →
-            </button>
+<!-- DEMO RAPIDE -->
+<section style="padding:80px 0;background:var(--bg)" id="demo">
+    <div class="container text-center">
+        <h2>Accéder à la démo</h2>
+        <p class="text-muted mt-4" style="margin-bottom:40px">Explorez chaque interface selon le rôle</p>
+        <div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap">
+            <a href="?role=student" class="card" style="width:220px;cursor:pointer;text-decoration:none;transition:all .2s" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
+                <div style="font-size:48px;margin-bottom:12px">🎓</div>
+                <h3>Étudiant</h3>
+                <p class="text-muted" style="font-size:.875rem;margin-top:8px">Trouver colocataire &amp; logement</p>
+                <div class="btn btn-primary btn-sm" style="margin-top:16px;width:100%;justify-content:center">Voir le dashboard →</div>
+            </a>
+            <a href="?role=locataire" class="card" style="width:220px;cursor:pointer;text-decoration:none;transition:all .2s" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
+                <div style="font-size:48px;margin-bottom:12px">🏠</div>
+                <h3>Propriétaire</h3>
+                <p class="text-muted" style="font-size:.875rem;margin-top:8px">Publier &amp; gérer ses annonces</p>
+                <div class="btn btn-primary btn-sm" style="margin-top:16px;width:100%;justify-content:center">Voir le dashboard →</div>
+            </a>
+            <a href="?role=admin" class="card" style="width:220px;cursor:pointer;text-decoration:none;transition:all .2s" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
+                <div style="font-size:48px;margin-bottom:12px">⚙️</div>
+                <h3>Administrateur</h3>
+                <p class="text-muted" style="font-size:.875rem;margin-top:8px">Statistiques &amp; modération</p>
+                <div class="btn btn-primary btn-sm" style="margin-top:16px;width:100%;justify-content:center">Voir le dashboard →</div>
+            </a>
         </div>
     </div>
 </section>
 
-<!-- FOOTER -->
 <footer>
     <div class="container">
-        <div class="footer-grid">
-            <div>
-                <div class="footer-brand">Binomy</div>
-                <p style="font-size:.9rem;line-height:1.7">La plateforme qui connecte les étudiants tunisiens avec des colocataires compatibles et des logements abordables.</p>
-            </div>
-            <div>
-                <div style="color:#fff;font-weight:600;margin-bottom:12px">Plateforme</div>
-                <ul class="footer-links">
-                    <li><a href="#features">Fonctionnalités</a></li>
-                    <li><a href="#" onclick="openModal('register')">S'inscrire</a></li>
-                    <li><a href="#" onclick="openModal('login')">Se connecter</a></li>
-                </ul>
-            </div>
-            <div>
-                <div style="color:#fff;font-weight:600;margin-bottom:12px">Projet</div>
-                <ul class="footer-links">
-                    <li><a href="#">TEK-UP University</a></li>
-                    <li><a href="#">Mini-Projet PHP/JS</a></li>
-                    <li><a href="#">GitHub</a></li>
-                </ul>
-            </div>
-        </div>
         <div class="footer-bottom">
-            &copy; 2024 Binomy — Mini-Projet TEK-UP · PHP + PDO + Fetch API
+            &copy; 2024 Binomy — Mini-Projet PHP/JavaScript | TEK-UP University
         </div>
     </div>
 </footer>
 
-<!-- MODAL AUTH -->
-<div class="modal-overlay" id="auth-modal">
+<!-- MODAL AUTH (statique, juste pour montrer l'interface) -->
+<div class="modal-overlay" id="auth-modal" onclick="if(event.target===this)this.classList.remove('open')">
     <div class="modal">
         <div class="modal-tabs">
-            <button class="modal-tab active" data-tab="login"    onclick="switchTab('login')">Connexion</button>
-            <button class="modal-tab"         data-tab="register" onclick="switchTab('register')">Inscription</button>
+            <button class="modal-tab active" onclick="switchTab('login')">Connexion</button>
+            <button class="modal-tab" onclick="switchTab('register')">Inscription</button>
         </div>
 
-        <!-- LOGIN -->
-        <div id="panel-login" class="auth-panel">
-            <div id="login-alert"></div>
-            <form onsubmit="handleLogin(event)">
-                <div class="form-group">
-                    <label class="form-label">Adresse email</label>
-                    <input id="login-email" type="email" class="form-control" placeholder="votre@email.com" required>
+        <div id="panel-login">
+            <div class="form-group">
+                <label class="form-label">Adresse email</label>
+                <input type="email" class="form-control" placeholder="votre@email.com">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Mot de passe</label>
+                <input type="password" class="form-control" placeholder="••••••">
+            </div>
+            <div style="margin-bottom:16px">
+                <label class="form-label">Accès rapide (démo)</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <a href="?role=student"   class="btn btn-outline btn-sm">🎓 Étudiant</a>
+                    <a href="?role=locataire" class="btn btn-outline btn-sm">🏠 Propriétaire</a>
+                    <a href="?role=admin"     class="btn btn-outline btn-sm">⚙️ Admin</a>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Mot de passe</label>
-                    <input id="login-password" type="password" class="form-control" placeholder="••••••" required>
-                </div>
-                <button id="login-btn" class="btn btn-primary" style="width:100%" type="submit"
-                        data-label="Se connecter">Se connecter</button>
-            </form>
-            <p class="text-center text-muted mt-4" style="font-size:.875rem">
-                Pas encore de compte ? <a href="#" onclick="switchTab('register')">S'inscrire</a>
-            </p>
+            </div>
+            <button class="btn btn-primary" style="width:100%">Se connecter</button>
         </div>
 
-        <!-- REGISTER -->
-        <div id="panel-register" class="auth-panel" hidden>
-            <div id="register-alert"></div>
-            <form onsubmit="handleRegister(event)">
-                <div class="form-group">
-                    <label class="form-label">Nom complet</label>
-                    <input id="reg-name" type="text" class="form-control" placeholder="Ahmed Ben Ali" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Adresse email</label>
-                    <input id="reg-email" type="email" class="form-control" placeholder="votre@email.com" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Mot de passe</label>
-                    <input id="reg-password" type="password" class="form-control" placeholder="Min. 6 caractères" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Je suis…</label>
-                    <select id="reg-role" class="form-control" required>
-                        <option value="">-- Choisir un rôle --</option>
-                        <option value="student">🎓 Étudiant — je cherche un colocataire / logement</option>
-                        <option value="locataire">🏠 Propriétaire — je veux publier une annonce</option>
-                    </select>
-                </div>
-                <button id="register-btn" class="btn btn-primary" style="width:100%" type="submit"
-                        data-label="Créer mon compte">Créer mon compte</button>
-            </form>
-            <p class="text-center text-muted mt-4" style="font-size:.875rem">
-                Déjà inscrit ? <a href="#" onclick="switchTab('login')">Se connecter</a>
-            </p>
+        <div id="panel-register" hidden>
+            <div class="form-group">
+                <label class="form-label">Nom complet</label>
+                <input type="text" class="form-control" placeholder="Ahmed Ben Ali">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Adresse email</label>
+                <input type="email" class="form-control" placeholder="votre@email.com">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Mot de passe</label>
+                <input type="password" class="form-control" placeholder="Min. 6 caractères">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Je suis…</label>
+                <select class="form-control">
+                    <option value="">-- Choisir un rôle --</option>
+                    <option value="student">🎓 Étudiant</option>
+                    <option value="locataire">🏠 Propriétaire</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" style="width:100%">Créer mon compte</button>
         </div>
 
-        <button onclick="closeModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-muted)">✕</button>
+        <button onclick="document.getElementById('auth-modal').classList.remove('open')"
+                style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-muted)">✕</button>
     </div>
 </div>
 
-<script src="/assets/js/auth.js"></script>
+<script>
+function switchTab(tab) {
+    document.querySelectorAll('.modal-tab').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
+    document.getElementById('panel-login').hidden    = tab !== 'login';
+    document.getElementById('panel-register').hidden = tab !== 'register';
+}
+</script>
 </body>
 </html>
