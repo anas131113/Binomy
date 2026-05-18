@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Propriétaire — Binomy</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+
+    <input type="hidden" id="current-user-id" value="">
+
+    <!-- ===== NAVBAR ===== -->
+    <nav class="navbar">
+        <a href="../index.html" class="navbar-brand">Bin<span>omy</span></a>
+        <div class="navbar-links">
+            <span style="color:var(--text-muted);font-size:.9rem">Bonjour, <strong id="nav-username">…</strong></span>
+            <span class="badge badge-info">Propriétaire</span>
+            <button class="btn btn-outline btn-sm" onclick="handleLogout()">Déconnexion</button>
+        </div>
+    </nav>
+
+    <!-- ===== LAYOUT ===== -->
+    <div class="dashboard-layout">
+
+        <aside class="sidebar">
+            <div class="sidebar-section-title">Navigation</div>
+            <ul class="sidebar-menu">
+                <li><a href="#" class="active" onclick="showSection('home');return false"> <span
+                            class="sidebar-icon">🏠</span> Accueil</a></li>
+                <li><a href="#" onclick="showSection('listings');return false"> <span class="sidebar-icon">📋</span> Mes
+                        annonces</a></li>
+                <li><a href="#" onclick="showSection('new');return false"> <span class="sidebar-icon">➕</span> Publier
+                        une annonce</a></li>
+                <li><a href="#" onclick="showSection('messages');return false"> <span class="sidebar-icon">💬</span>
+                        Messages reçus</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+
+            <!-- ===== ACCUEIL ===== -->
+            <div id="s-home">
+                <div class="page-title">Bonjour, <span id="home-username">…</span> 🏠</div>
+                <p class="page-subtitle">Gérez vos annonces et vos messages</p>
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div class="stat-card-icon icon-purple">📋</div>
+                        <div class="stat-card-info">
+                            <div class="stat-num" id="stat-total">—</div>
+                            <div class="stat-lbl">Mes annonces</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon icon-green">✅</div>
+                        <div class="stat-card-info">
+                            <div class="stat-num" id="stat-available">—</div>
+                            <div class="stat-lbl">Disponibles</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon icon-orange">🔑</div>
+                        <div class="stat-card-info">
+                            <div class="stat-num" id="stat-rented">—</div>
+                            <div class="stat-lbl">Louées</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon icon-blue">💬</div>
+                        <div class="stat-card-info">
+                            <div class="stat-num" id="stat-msgs">—</div>
+                            <div class="stat-lbl">Messages reçus</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Actions rapides</h3>
+                    </div>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap">
+                        <button class="btn btn-primary" onclick="showSection('new')">➕ Publier une annonce</button>
+                        <button class="btn btn-outline" onclick="showSection('listings')">📋 Voir mes annonces</button>
+                        <button class="btn btn-outline" onclick="showSection('messages')">💬 Voir les messages</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== MES ANNONCES ===== -->
+            <div id="s-listings" hidden>
+                <div class="page-title">Mes annonces</div>
+                <div id="my-listings-container">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+
+            <!-- ===== NOUVELLE ANNONCE ===== -->
+            <div id="s-new" hidden>
+                <div class="page-title">Publier une annonce</div>
+                <p class="page-subtitle">Remplissez les informations de votre logement</p>
+                <div class="card">
+                    <div id="new-listing-alert"></div>
+                    <form id="new-listing-form" onsubmit="submitListing(event)" enctype="multipart/form-data"
+                        novalidate>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                            <div class="form-group" style="grid-column:1/-1">
+                                <label class="form-label" for="nl-title">Titre de l'annonce *</label>
+                                <input type="text" id="nl-title" class="form-control"
+                                    placeholder="Ex: Studio meublé proche faculté de droit" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="nl-type">Type de logement *</label>
+                                <select id="nl-type" class="form-control" required>
+                                    <option value="">-- Choisir --</option>
+                                    <option value="chambre">Chambre</option>
+                                    <option value="studio">Studio</option>
+                                    <option value="appartement">Appartement</option>
+                                    <option value="maison">Maison</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="nl-price">Prix mensuel (TND) *</label>
+                                <input type="number" id="nl-price" class="form-control" placeholder="350" min="1"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="nl-city">Ville *</label>
+                                <input type="text" id="nl-city" class="form-control" placeholder="Tunis" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="nl-address">Adresse</label>
+                                <input type="text" id="nl-address" class="form-control" placeholder="Rue, quartier…">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="nl-rooms">Nombre de pièces</label>
+                                <input type="number" id="nl-rooms" class="form-control" placeholder="2" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="nl-surface">Surface (m²)</label>
+                                <input type="number" id="nl-surface" class="form-control" placeholder="45" min="1">
+                            </div>
+                            <div class="form-group" style="grid-column:1/-1">
+                                <label class="form-label" for="nl-desc">Description *</label>
+                                <textarea id="nl-desc" class="form-control" rows="4"
+                                    placeholder="Décrivez votre logement : équipements, proximité des transports, règles de la maison…"
+                                    required></textarea>
+                            </div>
+                            <div class="form-group" style="grid-column:1/-1">
+                                <label class="form-label" for="nl-images">Photos (max 5, 5 MB chacune)</label>
+                                <input type="file" id="nl-images" name="images[]" class="form-control"
+                                    accept="image/jpeg,image/png,image/webp" multiple>
+                            </div>
+                        </div>
+                        <button type="submit" id="nl-submit-btn" class="btn btn-primary btn-lg"
+                            data-label="📤 Publier l'annonce">
+                            📤 Publier l'annonce
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ===== MODIFIER ANNONCE ===== -->
+            <div id="s-edit" hidden>
+                <div class="page-title">Modifier l'annonce</div>
+                <div class="card">
+                    <div id="edit-listing-alert"></div>
+                    <form id="edit-listing-form" onsubmit="updateListing(event)" novalidate>
+                        <input type="hidden" id="el-id">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                            <div class="form-group" style="grid-column:1/-1">
+                                <label class="form-label" for="el-title">Titre *</label>
+                                <input type="text" id="el-title" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="el-price">Prix (TND) *</label>
+                                <input type="number" id="el-price" class="form-control" min="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="el-city">Ville *</label>
+                                <input type="text" id="el-city" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="el-address">Adresse</label>
+                                <input type="text" id="el-address" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="el-rooms">Pièces</label>
+                                <input type="number" id="el-rooms" class="form-control" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="el-surface">Surface (m²)</label>
+                                <input type="number" id="el-surface" class="form-control" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="el-status">Statut</label>
+                                <select id="el-status" class="form-control">
+                                    <option value="available">✅ Disponible</option>
+                                    <option value="rented">🔑 Louée</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="grid-column:1/-1">
+                                <label class="form-label" for="el-desc">Description *</label>
+                                <textarea id="el-desc" class="form-control" rows="4" required></textarea>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:12px">
+                            <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
+                            <button type="button" class="btn btn-outline"
+                                onclick="showSection('listings')">Annuler</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ===== MESSAGES REÇUS ===== -->
+            <div id="s-messages" hidden>
+                <div class="page-title">Messages reçus</div>
+                <p class="page-subtitle">Répondez aux étudiants intéressés par vos annonces</p>
+                <div class="chat-layout">
+                    <div class="chat-list" id="owner-chat-list">
+                        <div class="spinner"></div>
+                    </div>
+                    <div class="chat-area">
+                        <div style="padding:16px;border-bottom:1px solid var(--border);font-weight:600"
+                            id="owner-chat-partner">
+                            Sélectionnez une conversation
+                        </div>
+                        <div class="chat-messages" id="chat-messages">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">💬</div>
+                                <p>Sélectionnez une conversation</p>
+                            </div>
+                        </div>
+                        <form class="chat-input-area" id="chat-form" onsubmit="sendMessage(event)">
+                            <input type="text" id="chat-input" class="form-control" placeholder="Écrire un message…"
+                                autocomplete="off">
+                            <button type="submit" class="btn btn-primary">Envoyer</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ===== TOAST ===== -->
+    <div id="toast-container"
+        style="position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px"></div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/chat.js"></script>
+    <script src="../js/locataire.js"></script>
+    <script src="../js/dashboard.js"></script>
+</body>
+
+</html>

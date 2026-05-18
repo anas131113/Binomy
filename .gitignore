@@ -1,0 +1,9 @@
+config/db.php
+uploads/listings/*
+uploads/avatars/*
+!uploads/listings/.gitkeep
+!uploads/avatars/.gitkeep
+*.log
+.DS_Store
+.env
+vendor/

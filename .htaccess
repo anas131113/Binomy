@@ -1,0 +1,33 @@
+# ============================================================
+# BINOMY — Configuration Apache pour XAMPP
+# ============================================================
+
+# Activer le moteur de réécriture
+Options -Indexes
+Options +FollowSymLinks
+
+# Encodage par défaut
+AddDefaultCharset UTF-8
+
+# Sécurité : masquer les erreurs PHP en production
+# php_flag display_errors Off
+
+# Autoriser les requêtes cross-origin pour les appels Fetch API
+# (nécessaire si le frontend et le backend sont sur des ports différents)
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Protéger les fichiers sensibles
+<FilesMatch "\.(sql|sh|env|log)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Empêcher l'accès direct au dossier config
+<FilesMatch "^db\.php$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
