@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin — Binomy</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+
+    <input type="hidden" id="current-user-id" value="">
+
+    <!-- ===== NAVBAR ===== -->
+    <nav class="navbar">
+        <a href="../index.html" class="navbar-brand">Bin<span>omy</span></a>
+        <div class="navbar-links">
+            <span class="badge badge-danger">ADMIN</span>
+            <span style="color:var(--text-muted);font-size:.9rem" id="nav-username">Admin Binomy</span>
+            <button class="btn btn-outline btn-sm" onclick="handleLogout()">Déconnexion</button>
+        </div>
+    </nav>
+
+    <!-- ===== LAYOUT ===== -->
+    <div class="dashboard-layout">
+
+        <aside class="sidebar">
+            <div class="sidebar-section-title">Administration</div>
+            <ul class="sidebar-menu">
+                <li><a href="#" class="active" onclick="showSection('stats');return false"> <span
+                            class="sidebar-icon">📊</span> Statistiques</a></li>
+                <li><a href="#" onclick="showSection('users');return false"> <span class="sidebar-icon">👥</span>
+                        Utilisateurs</a></li>
+                <li><a href="#" onclick="showSection('listings');return false"> <span class="sidebar-icon">🏡</span>
+                        Annonces</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+
+            <!-- ===== STATISTIQUES ===== -->
+            <div id="s-stats">
+                <div class="page-title">Dashboard Administrateur</div>
+                <p class="page-subtitle">Vue d'ensemble de la plateforme Binomy</p>
+
+                <div class="stats-cards" id="admin-stats-cards">
+                    <div class="stat-card">
+                        <div class="stat-card-icon icon-purple">👥</div>
+                        <div class="stat-card-info">
+                            <div class="stat-num" id="st-users">—</div>
+                            <div class="stat-lbl">Utilisateurs total</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon icon-blue">🎓</div>
+                        <div class="stat-card-info">
+                            <div class="stat-num" id="st-students">—</div>
+                            <div class="stat-lbl">Étudiants</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon icon-orange">🏠</div>
+                        <div class="stat-card-info">
+                            <div class="stat-num" id="st-locataires">—</div>
+                            <div class="stat-lbl">Propriétaires</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon icon-green">📋</div>
+                        <div class="stat-card-info">
+                            <div class="stat-num" id="st-listings">—</div>
+                            <div class="stat-lbl">Annonces publiées</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon icon-green">✅</div>
+                        <div class="stat-card-info">
+                            <div class="stat-num" id="st-available">—</div>
+                            <div class="stat-lbl">Logements disponibles</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon icon-purple">🤝</div>
+                        <div class="stat-card-info">
+                            <div class="stat-num" id="st-matches">—</div>
+                            <div class="stat-lbl">Matches créés</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon icon-blue">💬</div>
+                        <div class="stat-card-info">
+                            <div class="stat-num" id="st-messages">—</div>
+                            <div class="stat-lbl">Messages échangés</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon icon-orange">⏳</div>
+                        <div class="stat-card-info">
+                            <div class="stat-num" id="st-pending">—</div>
+                            <div class="stat-lbl">Demandes en attente</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:8px">
+                    <!-- Graphique inscriptions -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Inscriptions — 7 derniers jours</h3>
+                        </div>
+                        <div id="registrations-chart"
+                            style="display:flex;align-items:flex-end;gap:8px;height:100px;padding-top:12px">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                    <!-- Répartition rôles -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Répartition des utilisateurs</h3>
+                        </div>
+                        <div id="roles-chart" style="display:flex;flex-direction:column;gap:12px;padding-top:8px">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== UTILISATEURS ===== -->
+            <div id="s-users" hidden>
+                <div class="page-title">Gestion des utilisateurs</div>
+                <div class="card" style="margin-bottom:20px">
+                    <div style="display:flex;gap:12px;flex-wrap:wrap">
+                        <input type="text" id="user-search" class="form-control"
+                            placeholder="Rechercher par nom ou email…" style="flex:1;min-width:200px">
+                        <select id="user-role-filter" class="form-control" style="width:180px">
+                            <option value="">Tous les rôles</option>
+                            <option value="student">Étudiants</option>
+                            <option value="locataire">Propriétaires</option>
+                            <option value="admin">Admins</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="loadUsers()">🔍 Filtrer</button>
+                    </div>
+                </div>
+                <div id="users-table-container">
+                    <div class="spinner"></div>
+                </div>
+                <div id="users-pagination"></div>
+            </div>
+
+            <!-- ===== ANNONCES ADMIN ===== -->
+            <div id="s-listings" hidden>
+                <div class="page-title">Gestion des annonces</div>
+                <div id="admin-listings-container">
+                    <div class="spinner"></div>
+                </div>
+                <div id="admin-listings-pagination"></div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ===== TOAST ===== -->
+    <div id="toast-container"
+        style="position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px"></div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/admin.js"></script>
+    <script src="../js/dashboard.js"></script>
+</body>
+
+</html>
